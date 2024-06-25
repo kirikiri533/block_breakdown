@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #can{
+            background-color:#ddd;
+            display: block;
+            margin: 32px auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="can"></canvas>
+    <script>
+
+        const can = document.getElementById("can");
+        const con = can.getContext("2d");
+
+        can.width = 400;
+        can.height = 400;
+                
+        const ball = {
+            x:null,
+            y:null,
+            width:5,
+            height:5,
+            speed:4,
+            dx:null,
+            dy:null,
+
+            update:function(){
+                con.fillRect(this.x,this.y,this.width,this.height);
+                con.fill();
+
+                if(this.x < 0 || this.x > can.width) this.dx *= -1;
+                if(this.y < 0 || this.y > can.height) this.dy *= -1;
+
+                this.x += this.dx;
+                this.y += this.dy;
+            }
+        }
+        const paddle = {
+            x:null,
+            y:null,
+            width:100,
+            height:15,
+            speed:0,
+
+            update:function(){
+                con.fillRect(this.x,this.y,this.width,this.height);
+                con.fill();
+
+                this.x += this.speed;
+            }
+            
+        }
+        const block = {
+            width:null,
+            height:20,
+            data:[],
+
+            update:function(){
+                this.data.forEach(brick => {
+                    con.strokeRect(brick.x,brick.y,brick.width,brick.height);
+                    con.stroke();
+                })
+            }
+        }
+        const level = [
+            [0,0,0,0,0,0],
+            [0,0,0,0,0,0],
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1],
+        ]
+
+        const init = () => {
+            paddle.x = can.width / 2 - paddle.width / 2;
+            paddle.y = can.height - paddle.height;
+
+            ball.x = can.width / 2;
+            ball.y = can.height /2 - 50;
+            ball.dx = ball.speed;
+            ball.dy = ball.speed;
+
+            block.width = can.width / level[0].length;
+
+            for(let i=0; i<level.length;i++){
+                for(let j=0; j<level[i].length;j++){
+                    if(level[i][j]){
+                        block.data.push({
+                            x:block.width * j,
+                            y:block.height * i,
+                            width:block.width,
+                            height:block.height
+                        })
+                    }   
+                }
+            }
+        }
+        const collide = (obj1,obj2) => {
+            return obj1.x  < obj2.x + obj2.width &&
+                   obj2.x  < obj1.x + obj1.width && 
+                   obj1.y  < obj2.y + obj2.height &&
+                   obj2.y  < obj1.y + obj1.height;
+        }
+        const loop = () => {
+            con.clearRect(0,0,can.width,can.height);
+            paddle.update();
+            ball.update();
+            block.update();
+
+            if(collide(ball,paddle)){
+                ball.dy *= -1; 
+            }
+
+            block.data.forEach((brick,index)=>{
+                if(collide(ball,brick)){
+                    ball.dy *= -1;
+                    block.data.splice(index,1);
+                }
+            })
+
+            window.requestAnimationFrame(loop);
+        }
+
+        init();
+        loop();
+
+        document.addEventListener("keydown",e => {
+            if(e.key == "ArrowLeft") paddle.speed = -6;
+            if(e.key == "ArrowRight") paddle.speed = 6;
+        });
+        document.addEventListener("keyup",() => paddle.speed = 0);
+        
+
+    </script>
+</body>
+</html>
